@@ -1,0 +1,58 @@
+#! /usr/bin/env python3
+
+'''
+file:           /messi-times-eleven
+author:         Michal Glos (xglosm01)
+established:    20.1.2023
+last modified:  22.1.2023
+
+                        ##################
+                        #@$%&        &%$@#
+                        #!   <(o )___   !#
+                        #!    ( ._> /   !#
+                        #!     `---'    !#
+                        #@$%&        &%$@#
+                        ##################
+
+This is wrapper around environment, provides classic OpenAI interface
+Wrapper is here because different environments could be used, copmplying to different standards
+'''
+
+from argparse import ArgumentParser
+
+import utils
+
+from agent.agents import Agents
+from curriculum.buffer import MultiAgentMultiModelReplayBuffer
+from env.env import Env
+
+parser = ArgumentParser()
+
+parser.add_argument('--train', action='store_true', help='Execute training')
+parser.add_argument('--eval', action='store_true', help='Evaluate the agents')
+parser.add_argument('--cfg', type=str, default='cfg.yaml', help='Path to config file')
+
+parser.add_argument('--debug', action='store_true', help='More verbose output for debugging purposes')
+
+if __name__ == "__main__":
+    # Parse the arguments
+    args = parser.parse_args()
+    # Load the configuration from provided or default file
+    cfg = utils.load_config(args.cfg)
+    # cfg = utils.load_config('cfg.yaml')
+    # Create the environment
+    env = Env(cfg['env'])
+    if args.debug:
+        env.dump_config()
+    # Initialize the Agents
+    agents = Agents(cfg['primary_model'], cfg['secondary_model'], env)
+    # Initialize the replay buffer when training required
+    # TODO: Fill in the dims
+    if args.train:
+        buffer = MultiAgentMultiModelReplayBuffer(cfg['training']['memory'], env.observation_space,env.action_space, cfg['env']['max_agents'])
+        agents.perform(games=10, train=False, buffer=buffer)
+        agents.train( buffer, cfg['training'])
+    
+    if args.eval:
+        agents.evaluate(cfg['training']['eval_games'])
+    

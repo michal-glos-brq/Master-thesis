@@ -1,0 +1,91 @@
+# This is a configuration file with no additional configuration
+# Provided script is capable of running without any further model/algorithm
+# specifications, but will run the most basic thing
+
+# Define primary MADDPG model
+primary_model:
+  # Basic configuration of the model as a whole
+  enabled: True
+  authentic_experience: True
+  return_experience: False
+  tau: 0.01
+  gamma: 0.95
+  batch: 64
+  start_agents: 1
+  goal_agents: 1
+
+  # Actor configuration
+  actor_cnf:
+    model: 'regular'
+    obs_raw: False
+    lr: 0.01
+    # Encoder config
+    layers_enc: [[115, 64]]
+    layer_opts_enc: [{}]  # Could be defined with one-element list of dict or dict for each layer
+    act_enc: 'ReLU'
+    out_act_enc: 'ReLU'
+    out_act_opts_enc: {}  # Is defined only once (only one output activation)
+    # Config of the rest of NN
+    layers_policy: [[64, 32], [32, 19]]
+    layer_opts_policy: [{}]
+    act_policy: 'ReLU'
+    out_act_policy: 'Softmax'
+    out_act_opts_policy:
+      dim: 1
+
+  # Critic configuration (actor config just gets updated)
+  critic_cnf:
+    # Encoder config
+    layers_enc: [[134, 128]]
+    layer_opts_enc: [{}]  # Could be defined with one-element list of dict or dict for each layer
+    act_enc: 'ReLU'
+    out_act_enc: 'ReLU'
+    out_act_opts_enc: {}  # Is defined only once (only one output activation)
+    # Config of the rest of NN
+    layers_policy: [[128, 32], [32, 1]]
+    layer_opts_policy: [{}]
+    act_policy: 'ReLU'
+    # It's None in Pyton (would be by default, but we have to override the actor settings)
+    out_act_policy: NULL
+    out_act_opts_policy:  {}
+
+
+secondary_model:
+  enabled: False
+  actor_cnf:
+    model: 'regular'
+  critic_cnf: {}
+  authentic_experience: True
+  return_experience: False
+  tau: 0.01
+  gamma: 0.95
+  batch: 64
+  start_agents: 1
+  goal_agents: 1
+
+
+training:
+  # Replay buffer memory
+  memory: 100000
+  # How many entries to insert into replay buffer before starting the training
+  replay_buffer_headstart: 6400
+  # How many steps
+  train_steps: 1000000
+  # How many games to evaluate?
+  eval_games: 1000
+  # Configure the output requirements for training and evaluation
+  training_output: {}
+  eval_output: {}
+
+env:
+  name: 'gfootball'
+  max_agents: 1
+  # This goes to the env builder when training
+  builder_params:
+    env_name: 'academy_empty_goal_close'
+    representation: 'simple115v2'
+    stacked: False
+    render: False
+    write_goal_dumps: False
+    write_full_episode_dumps: False
+    number_of_left_players_agent_controls: 1
